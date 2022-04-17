@@ -4,7 +4,7 @@
 #include <random>
 
 #define READ_TEST_PATH "read_test/"
-#define BIG_TEST_SIZE 1000
+#define BIG_TEST_SIZE 100
 
 TEST(ReadMethodTests, fileSize) {
     std::vector<char> testBytes = {

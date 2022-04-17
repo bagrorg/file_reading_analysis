@@ -4,7 +4,7 @@
 #include <random>
 
 #define MMAP_TEST_PATH "mmap_test/"
-#define BIG_TEST_SIZE 1000
+#define BIG_TEST_SIZE 100
 
 TEST(MMapMethodTests, fileSize) {
     std::vector<char> testBytes = {
