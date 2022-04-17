@@ -137,5 +137,6 @@ void IfstreamMethod::run_() {
         stat.add_stats(buffer.data(), readed);
         std::cout << fileSize << ' ' << buffer.size() << ' ' << fin.good() << ' ' << curSize << std::endl;
     }
+    fin.close();
 }
 
