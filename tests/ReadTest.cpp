@@ -4,7 +4,7 @@
 #include <random>
 
 #define READ_TEST_PATH "read_test/"
-#define BIG_TEST_SIZE 10
+#define BIG_TEST_SIZE 1000
 
 TEST(ReadMethodTests, fileSize) {
     std::vector<char> testBytes = {
@@ -52,7 +52,7 @@ TEST(ReadMethodTests, statisticsDifferent) {
             123
     };
 
-    fs::path inp = fs::path(READ_TEST_PATH) / fs::path("statisticsDifferent");
+    fs::path inp = fs::path(READ_TEST_PATH) / fs::path("statisticsDifferentTest");
     TestFile tf(inp, testBytes);
     ReadMethod m(inp, 256);
     m.run();
@@ -80,7 +80,7 @@ TEST(ReadMethodTests, bigStatsTest) {
         expected[b]++;
     });
 
-    fs::path inp = fs::path(READ_TEST_PATH) / fs::path("statisticsDifferent");
+    fs::path inp = fs::path(READ_TEST_PATH) / fs::path("bigStatsTest");
     TestFile tf(inp, testBytes);
     ReadMethod m(inp, 256);
     m.run();
