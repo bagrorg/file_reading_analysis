@@ -34,7 +34,7 @@ void Method::run() {
 }
 
 void Method::report(const fs::path &output) {
-    std::ofstream out(output);
+    std::ofstream out(output, std::fstream::app);
 
     if (fs::is_empty(output)) {
         out << "method,duration,size\n";
