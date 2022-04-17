@@ -4,7 +4,7 @@
 #include <random>
 
 #define IFSTREAM_TEST_PATH "ifstream_test/"
-#define BIG_TEST_SIZE 100
+#define BIG_TEST_SIZE 100000
 
 TEST(IfstreamMethodTests, fileSize) {
     std::vector<char> testBytes = {
