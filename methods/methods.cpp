@@ -131,6 +131,7 @@ void IfstreamMethod::run_() {
         fin.read(buffer.data(), buffer.size());
         size_t readed = fin.gcount();
         stat.add_stats(buffer.data(), readed);
+        std::cout << buffer.size() << std::endl;
     }
 }
 
