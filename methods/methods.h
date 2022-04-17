@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 using Duration = std::chrono::duration<double, std::micro>;
 
 struct Statistic {
-    std::array<size_t, 256> bytes_stat;
+    std::array<size_t, 256> bytes_stat = {};
 
     void add_stats(const char *data, size_t length);
     void print(std::ostream &out);
@@ -22,11 +22,18 @@ public:
     void report(const fs::path &output);
     void print(std::ostream &out);
 
+    Statistic getStats() const;
+
+
 protected:
     virtual void run_() = 0;
 
     Statistic stat;
     fs::path input;
+public:
+    size_t getFileSize() const;
+
+protected:
     size_t fileSize;
     std::string name;
     Duration dur;

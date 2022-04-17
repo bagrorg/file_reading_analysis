@@ -50,6 +50,14 @@ void Method::print(std::ostream &out) {
     stat.print(out);
 }
 
+Statistic Method::getStats() const {
+    return stat;
+}
+
+size_t Method::getFileSize() const {
+    return fileSize;
+}
+
 MMapMethod::MMapMethod(const fs::path &input)
         : Method("mmap", input) {}
 
