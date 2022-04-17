@@ -126,12 +126,16 @@ IfstreamMethod::IfstreamMethod(const fs::path &input, size_t BATCH_SIZE)
 void IfstreamMethod::run_() {
     std::ifstream fin(input);
     std::vector<char> buffer (BATCH_SIZE,0);
+    size_t curSize = 0;
 
-    while(!fin.eof()) {
-        fin.read(buffer.data(), buffer.size());
+    while(curSize < fileSize) {
+        size_t wantToRead = std::min(buffer.size(), fileSize - curSize);
+        fin.read(buffer.data(), wantToRead);                 // TODO try?
         size_t readed = fin.gcount();
+        curSize += readed;
+
         stat.add_stats(buffer.data(), readed);
-        std::cout << fileSize << ' ' << buffer.size() << ' ' << fin.good() << std::endl;
+        std::cout << fileSize << ' ' << buffer.size() << ' ' << fin.good() << ' ' << curSize << std::endl;
     }
 }
 
