@@ -52,7 +52,7 @@ TEST(MMapMethodTests, statisticsDifferent) {
             123
     };
 
-    fs::path inp = fs::path(MMAP_TEST_PATH) / fs::path("statisticsDifferent");
+    fs::path inp = fs::path(MMAP_TEST_PATH) / fs::path("statisticsDifferentTest");
     TestFile tf(inp, testBytes);
     MMapMethod m(inp);
     m.run();
@@ -63,7 +63,7 @@ TEST(MMapMethodTests, statisticsDifferent) {
     ASSERT_EQ(stats.bytes_stat[0], 1);
 }
 
-TEST(MMapMethodTests, DISABLED_bigStatsTest) {
+TEST(MMapMethodTests, bigStatsTest) {
     std::random_device rnd_device;
     std::mt19937 mersenne_engine {rnd_device()};
     std::uniform_int_distribution<char> dist {-127, 127};
@@ -80,7 +80,7 @@ TEST(MMapMethodTests, DISABLED_bigStatsTest) {
         expected[b]++;
     });
 
-    fs::path inp = fs::path(MMAP_TEST_PATH) / fs::path("statisticsDifferent");
+    fs::path inp = fs::path(MMAP_TEST_PATH) / fs::path("bigStatsTest");
     TestFile tf(inp, testBytes);
     MMapMethod m(inp);
     m.run();
