@@ -8,104 +8,121 @@
 #include <unistd.h>
 #include <vector>
 
-Method::Method(const std::string &name, const fs::path &input,
-               size_t BATCH_SIZE)
-    : name(name), input(input), BATCH_SIZE(BATCH_SIZE) {
-  fileSize = fs::file_size(input);
+void Statistic::add_stats(const char *data, size_t length) {
+    for (int i = 0; i < length; i++) {
+        bytes_stat[data[i]] += 1;
+    }
 }
 
-void Method::operator()() {
-  auto host_start = std::chrono::steady_clock::now();
-  run();
-  auto host_end = std::chrono::steady_clock::now();
-  dur = host_end - host_start;
+void Statistic::print(std::ostream &out) {
+    for (int i = 0; i < bytes_stat.size(); i++) {
+        if (bytes_stat[i] == 0) continue;
+        out << '\t' << i << ' ' << bytes_stat[i] << std::endl;
+    }
+}
+
+Method::Method(const std::string &name, const fs::path &input)
+        : name(name), input(input) {
+    fileSize = fs::file_size(input);
+}
+
+void Method::run() {
+    auto host_start = std::chrono::steady_clock::now();
+    run_();
+    auto host_end = std::chrono::steady_clock::now();
+    dur = host_end - host_start;
 }
 
 void Method::report(const fs::path &output) {
-  std::ofstream out(output);
+    std::ofstream out(output);
 
-  if (fs::is_empty(output)) {
-    out << "method,duration,size\n";
-  }
+    if (fs::is_empty(output)) {
+        out << "method,duration,size\n";
+    }
 
-  out << name << "," << dur.count() << "," << fileSize << "\n";
+    out << name << "," << dur.count() << "," << fileSize << "\n";
 }
 
-MMapMethod::MMapMethod(const fs::path &input, size_t BATCH_SIZE)
-    : Method("mmap", input, BATCH_SIZE) {
-  size_t page_size = getpagesize();
-  if (BATCH_SIZE % page_size != 0) {
-    BATCH_SIZE = (BATCH_SIZE / page_size + 1) *
-                 page_size; // или как то учитывать только в оффсете?
-  }
+void Method::print(std::ostream &out) {
+    out << "Method: " << name << std::endl;
+    out << "\tSize: " << fileSize << std::endl;
+    out << "\tTime: " << dur.count() << std::endl;
+    stat.print(out);
 }
 
-void MMapMethod::run() {
-  int fd = open(input.string().c_str(), O_RDONLY);
-  size_t curSize = 0;
+MMapMethod::MMapMethod(const fs::path &input)
+        : Method("mmap", input) {}
 
-  while (curSize < fileSize) {
+void MMapMethod::run_() {
+    int fd = open(input.string().c_str(), O_RDONLY);
+
     errno = 0;
-    void *file_data = mmap(NULL, BATCH_SIZE, PROT_READ, MAP_PRIVATE, fd, 0);
-
+    void *file_data = mmap(nullptr, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
     if (file_data == MAP_FAILED) {
-      close(fd);
-      throw std::runtime_error(strerror(errno));
+        close(fd);
+        throw std::runtime_error(strerror(errno));
     }
 
     const char *casted_data = reinterpret_cast<const char *>(file_data);
-    stat.add_stats(casted_data, BATCH_SIZE);
+    stat.add_stats(casted_data, fileSize);
 
     errno = 0;
-    int retCode = munmap(file_data, BATCH_SIZE);
-
+    int retCode = munmap(file_data, fileSize);
     if (retCode != 0) {
-      close(fd);
-      throw std::runtime_error(strerror(errno));
+        close(fd);
+        throw std::runtime_error(strerror(errno));
     }
 
-    curSize += BATCH_SIZE;
-  }
-
-  close(fd);
+    close(fd);
 }
 
 ReadMethod::ReadMethod(const fs::path &input, size_t BATCH_SIZE)
-    : Method("read", input, BATCH_SIZE) {}
+        : Method("read", input), BATCH_SIZE(BATCH_SIZE) {}
 
-void ReadMethod::run() {
-  int fd = open(input.string().c_str(), O_RDONLY);
-  size_t curSize = 0;
-  std::vector<char> data(BATCH_SIZE);
+void ReadMethod::run_() {
+    int fd = open(input.string().c_str(), O_RDONLY);
+    size_t curSize = 0;
+    std::vector<char> data(BATCH_SIZE);
 
-  while (curSize < fileSize) {
-    errno = 0;
-    ssize_t readed = read(fd, data.data(), BATCH_SIZE);
+    while (curSize < fileSize) {
+        size_t wantToRead = std::min(BATCH_SIZE, fileSize - curSize);
+        errno = 0;
+        ssize_t readed = read(fd, data.data(), wantToRead);
 
-    if (readed == -1) {
-      switch (errno) {
-      case EAGAIN:
-      case EINTR:
-        continue;
+        if (readed == -1) {
+            switch (errno) {
+                case EAGAIN:
+                case EINTR:
+                    continue;
 
-      default:
-        throw std::runtime_error("Something wrong with file (READ): " +
-                                 std::string(strerror(errno)));
-      }
-    } else if (readed == 0) {
-      throw std::runtime_error(
-          "File trunkated! Current size: " + std::to_string(curSize) +
-          ", expected size: " + std::to_string(fileSize));
+                default:
+                    throw std::runtime_error("Something wrong with file (READ): " +
+                                             std::string(strerror(errno)));
+            }
+        } else if (readed == 0) {
+            throw std::runtime_error(
+                    "File trunkated! Current size: " + std::to_string(curSize) +
+                    ", expected size: " + std::to_string(fileSize));
+        }
+
+        stat.add_stats(data.data(), wantToRead);
+        curSize += wantToRead;
     }
 
-    stat.add_stats(data.data(), BATCH_SIZE);
-    curSize += BATCH_SIZE;
-  }
-
-  close(fd);
+    close(fd);
 }
 
 IfstreamMethod::IfstreamMethod(const fs::path &input, size_t BATCH_SIZE)
-    : Method("ifstream", input, BATCH_SIZE) {}
+        : Method("ifstream", input), BATCH_SIZE(BATCH_SIZE) {}
 
-void IfstreamMethod::run() {}
+void IfstreamMethod::run_() {
+    std::ifstream fin(input);
+    std::vector<char> buffer (BATCH_SIZE,0);
+
+    while(!fin.eof()) {
+        fin.read(buffer.data(), buffer.size());
+        size_t readed = fin.gcount();
+        stat.add_stats(buffer.data(), readed);
+    }
+}
+
