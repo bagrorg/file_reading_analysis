@@ -63,7 +63,7 @@ TEST(MMapMethodTests, statisticsDifferent) {
     ASSERT_EQ(stats.bytes_stat[0], 1);
 }
 
-TEST(MMapMethodTests, bigStatsTest) {
+TEST(MMapMethodTests, DISABLED_bigStatsTest) {
     std::random_device rnd_device;
     std::mt19937 mersenne_engine {rnd_device()};
     std::uniform_int_distribution<char> dist {-127, 127};
