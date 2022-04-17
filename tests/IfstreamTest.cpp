@@ -4,6 +4,7 @@
 #include <random>
 
 #define IFSTREAM_TEST_PATH "ifstream_test/"
+#define BIG_TEST_SIZE 1000
 
 TEST(IfstreamMethodTests, fileSize) {
     std::vector<char> testBytes = {
@@ -71,7 +72,7 @@ TEST(IfstreamMethodTests, bigStatsTest) {
         return dist(mersenne_engine);
     };
 
-    std::vector<char> testBytes(10000);
+    std::vector<char> testBytes(BIG_TEST_SIZE);
     std::generate(testBytes.begin(), testBytes.end(), gen);
 
     std::array<size_t, 256> expected = {};
