@@ -146,7 +146,7 @@ void IfstreamMethod::run_() {
 
     while(curSize < fileSize) {
         size_t wantToRead = std::min(buffer.size(), fileSize - curSize);
-        fin.read(buffer.data(), wantToRead);                 // TODO try?
+        fin.read(buffer.data(), wantToRead);
         size_t readed = fin.gcount();
         curSize += readed;
 

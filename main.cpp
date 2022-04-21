@@ -63,7 +63,6 @@ int main(int argc, char *argv[]) {
 
     MethodPtr m;
 
-    // TODO: FACTORY
     if (method_name == "mmap") {
         m = std::make_unique<MMapMethod>(fs::path(input_path));
     } else if (method_name == "ifstream") {
