@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../methods/methods.h" //TODO relative path
+#include "../methods/methods.h"
 #include "utils/utils.h"
 #include <random>
 

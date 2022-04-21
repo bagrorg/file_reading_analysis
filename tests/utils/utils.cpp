@@ -4,7 +4,7 @@
 TestFile::TestFile(const fs::path &p, const std::vector<char> &bytes) : p(p) {
     std::ofstream out(p, std::ios::binary);
     out.write(bytes.data(), bytes.size());
-    if (!out.good()) {   //TODO check
+    if (!out.good()) { 
         throw std::runtime_error("Something wrong with file creation");
     }
     if (!fs::exists(p)) {
