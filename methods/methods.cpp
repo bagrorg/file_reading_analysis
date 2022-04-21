@@ -10,7 +10,7 @@
 
 void Statistic::add_stats(const char *data, size_t length) {
     for (int i = 0; i < length; i++) {
-        bytes_stat[data[i]] += 1;
+        bytes_stat[data[i] + offset] += 1;
     }
 }
 
@@ -37,10 +37,16 @@ void Method::report(const fs::path &output) {
     std::ofstream out(output, std::fstream::app);
 
     if (fs::is_empty(output)) {
-        out << "method,duration,size\n";
+        out << "method,duration,size,batch\n";
     }
 
-    out << name << "," << dur.count() << "," << fileSize << "\n";
+    out << name << "," << dur.count() << "," << fileSize << ",";
+    if (withBatch) {
+        out << BATCH_SIZE;
+    } else {
+        out << -1;
+    }
+    out << "\n";
 }
 
 void Method::print(std::ostream &out) {
@@ -58,8 +64,14 @@ size_t Method::getFileSize() const {
     return fileSize;
 }
 
+void Method::refresh() {
+    stat.bytes_stat = {};
+}
+
 MMapMethod::MMapMethod(const fs::path &input)
-        : Method("mmap", input) {}
+        : Method("mmap", input) {
+    withBatch = false;
+}
 
 void MMapMethod::run_() {
     int fd = open(input.string().c_str(), O_RDONLY);
@@ -84,8 +96,10 @@ void MMapMethod::run_() {
     close(fd);
 }
 
-ReadMethod::ReadMethod(const fs::path &input, size_t BATCH_SIZE)
-        : Method("read", input), BATCH_SIZE(BATCH_SIZE) {}
+ReadMethod::ReadMethod(const fs::path &input, size_t BATCH_SIZE_)
+        : Method("read", input) {
+    BATCH_SIZE = BATCH_SIZE_;
+}
 
 void ReadMethod::run_() {
     int fd = open(input.string().c_str(), O_RDONLY);
@@ -120,8 +134,10 @@ void ReadMethod::run_() {
     close(fd);
 }
 
-IfstreamMethod::IfstreamMethod(const fs::path &input, size_t BATCH_SIZE)
-        : Method("ifstream", input), BATCH_SIZE(BATCH_SIZE) {}
+IfstreamMethod::IfstreamMethod(const fs::path &input, size_t BATCH_SIZE_)
+        : Method("ifstream", input) {
+    BATCH_SIZE = BATCH_SIZE_;
+}
 
 void IfstreamMethod::run_() {
     std::ifstream fin(input);

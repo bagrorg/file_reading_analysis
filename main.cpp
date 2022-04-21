@@ -81,6 +81,7 @@ int main(int argc, char *argv[]) {
         if (verbose) {
             m->print(std::cout);
         }
+        m->refresh();
     }
 
     return EXIT_SUCCESS;

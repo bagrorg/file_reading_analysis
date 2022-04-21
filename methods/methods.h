@@ -11,6 +11,7 @@ struct Statistic {
 
     void add_stats(const char *data, size_t length);
     void print(std::ostream &out);
+    int offset = -1 * std::numeric_limits<char>::min();
 };
 
 class Method {
@@ -21,6 +22,7 @@ public:
     void run();
     void report(const fs::path &output);
     void print(std::ostream &out);
+    void refresh();
 
     Statistic getStats() const;
 
@@ -30,6 +32,8 @@ protected:
 
     Statistic stat;
     fs::path input;
+    size_t BATCH_SIZE;
+    bool withBatch = true;
 public:
     size_t getFileSize() const;
 
@@ -48,17 +52,15 @@ private:
 
 class ReadMethod : public Method {
 public:    
-    ReadMethod(const fs::path &input, size_t BATCH_SIZE);
+    ReadMethod(const fs::path &input, size_t BATCH_SIZE_);
 private:    
     void run_() override;
-    size_t BATCH_SIZE;
 };
 
 class IfstreamMethod : public Method {
 public:    
-    IfstreamMethod(const fs::path &input, size_t BATCH_SIZE);
+    IfstreamMethod(const fs::path &input, size_t BATCH_SIZE_);
 private:    
     void run_() override;
-    size_t BATCH_SIZE;
 };
 
