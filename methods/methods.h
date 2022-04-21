@@ -11,7 +11,6 @@ struct Statistic {
 
     void add_stats(const char *data, size_t length);
     void print(std::ostream &out);
-    int offset = -1 * std::numeric_limits<char>::min();
 };
 
 class Method {

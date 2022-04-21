@@ -10,7 +10,7 @@
 
 void Statistic::add_stats(const char *data, size_t length) {
     for (int i = 0; i < length; i++) {
-        bytes_stat[data[i] + offset] += 1;
+        bytes_stat[(unsigned char) data[i]] += 1;
     }
 }
 
