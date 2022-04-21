@@ -77,7 +77,7 @@ TEST(MMapMethodTests, bigStatsTest) {
 
     std::array<size_t, 256> expected = {};
     std::for_each(testBytes.begin(), testBytes.end(), [&expected](char b) {
-        expected[b]++;
+        expected[(unsigned char) b]++;
     });
 
     fs::path inp = fs::path(MMAP_TEST_PATH) / fs::path("bigStatsTest");
