@@ -1,4 +1,4 @@
-# Использование 
+# Installation
 ```console
 $ mkdir build
 $ cd build
@@ -8,22 +8,25 @@ $ cd tests
 $ ./test
 ```
 
-### Использование приложения
+### Running
 ```console
 $ ./file_reading_analysis -m {method} -i {input} -o {output} -b {batch size} -v -r {iterations}
 ```
-- `method` -- метод для запуска (`ifstream`/`mmap`/`read`)
-- `input` -- файл для входа
-- `output` -- `.csv` файл для отчета
-- `batch size` -- размер батча. Если не предоставлен, то выбирается размер файла
-- `iterations` -- количество итераций. По умолчанию 1
+- `method` -- method to run (`ifstream`/`mmap`/`read`)
+- `input` -- input file
+- `output` -- `.csv` report file
+- `batch size` -- batch size for file processing. Equals file size if not set
+- `iterations` -- count of iterations
 
-`-v` флаг означает `verbose`, для вывода информации в консоль. Является опциональным
+`-v` -- verbose (optional)
 
-# Отчет
-## Обозначения
-На графиках `ms` означает микросекунды, `s` секунды, `b` байты и `mb` мегабайты.
-## Характеристики
+# Report
+## Designations
+- `ms` -- microseconds
+- `s` -- seconds 
+- `b` bytes
+- `mb` megabytes
+## Сharacteristics
 
 - OS: `Ubuntu 20.04.4 LTS`
 - Linux Kernel: `5.13.0-39-generic`
@@ -32,8 +35,8 @@ $ ./file_reading_analysis -m {method} -i {input} -o {output} -b {batch size} -v 
 - File system: `ext4`
 - I/O scheduler: `[mq-deadline] none`
 
-## Различные батчи
-Рассмотрим, как размер батча влияет на время нашей работы. Начнем анализ с рассмотрения зависимости времени от размера батча на фиксированном размере файла.
+## Different batch sizes
+Let's look at how the size of the batch affects the time of our work. Let's start the analysis by considering the dependence of time on the size of the batch on a fixed file size.
 
 <p float="left">
   <img src="https://github.com/bagrorg/file_reading_analysis/blob/development/report_process/Batches%20experiment%2C%20size%20%3D%201024.png" width="500" height="500">
@@ -42,40 +45,38 @@ $ ./file_reading_analysis -m {method} -i {input} -o {output} -b {batch size} -v 
   <img src="https://github.com/bagrorg/file_reading_analysis/blob/development/report_process/Batches%20experiment%2C%20size%20%3D%2016777216.png" width="500" height="500">
 </p>
 
-Можно заметить, что в основном `ifstream` уступает `read` по производительности, кроме первой картинки. Однако на первом графике изображен довольно таки маленький размер файла, и, обратив внимание на ось `y` мы увидим, что разница неощутима.
+You can notice that basically `ifstream` is inferior to `read` in performance, except for the first picture. However, the first graph shows a rather small file size, and if we pay attention to the `y` axis, we will see that the difference is imperceptible.
 
-Также видно, что, как и ожидалось, на больших размерах маленький размер батча может быть фатален для скорости работы. Действительно, слишком частое обращение к системному вызову начинает давать больший овердхед, чем использование более большого размера буффера.
+It is also seen that, as expected, on large sizes, a small batch size can be fatal for the performance. Indeed, too frequent access to the system call begins to give a larger overhead than using a larger buffer size.
 
-Интересно, что на большинестве графиков оптимум не находится справа -- он где-то посередине между маленьким размером и размером самого файла. Это показывает, что использование этих функций может быть улучшено кусочным чтением. 
+On most graphs the optimum is not on the right side - it is somewhere in the middle between the small size and the size of the file itself. This shows that the use of these functions can be improved by piecemeal reading.
 
-
-
-Теперь рассмотрим зависимость скорости работы от размера файла для разных размеров батчей
+Now let's consider the dependence of the speed of work on the file size for different sizes of batches
 
 <p float="left">
   <img src="https://github.com/bagrorg/file_reading_analysis/blob/development/report_process/Batches%20experiment%2C%20method%20%3D%20read.png" width="500" height="500">
   <img src="https://github.com/bagrorg/file_reading_analysis/blob/development/report_process/Batches%20experiment%2C%20method%20%3D%20ifstream.png" width="500" height="500">
 </p>
 
-Ожидаемо, размер батча на `128` показал себя значительно хуже остальных на больших данных. Эта тенденция была обсуждена выше. С ростом размера буффера работа в среднем становится лучше и на больших размерах сложно увидеть разницу, однако размер `131072` показал себя лучше, чем `2097152`. Будем использовать его для сравнения с `mmap`.
+As expected, the size of the `128` batch proved to be significantly worse than the rest on big data. This trend has been discussed above. With the growth of the buffer size, the work on average becomes better and it is difficult to see the difference on large sizes, but the size of `131072` proved to be better than `2097152'. We will use it for comparison with `mmap'.
 
 
-## Общее сравнение
-Зафиксируем размеры батчей для `read` и `ifstream` и сравним их с `mmap`. Результаты можно видеть на следующих графиках:
+## General comparison
+Let's fix the batch sizes for `read` and `ifstream` and compare them with `mmap`. The results can be seen in the following graphs:
 
 <img src="https://github.com/bagrorg/file_reading_analysis/blob/development/report_process/full.png">
 
-Наблюдая за маркерами на графиках видно, что `mmap` себя показывает чуть лучше, чем остальные, что делает его неплохим выбором для работы с файлами -- он быстр и не требует отдельной проработки с батчами.
+Watching the markers on the graph lines, it can be seen that `mmap` shows itself a little better than the others, which makes it a good choice for working with files - it is fast and does not require separate study with batches.
 
 
-Однако можно увидеть на графике интересное явление: примерно на `256` мегабайтах `mmap` и `ifstream` делают скачок по производительности в отрицательную сторону, в то время как `read` не реагирует никак. Возможно, это может быть объяснимо с аппаратной точки зрения.
+However, you can see an interesting phenomenon on the graph: about `256` megabytes of `mmap` and `ifstream` make a performance jump in the negative direction, while `read` does not react in any way. Perhaps this can be explained from a hardware point of view.
 
 
-Также стоит отметить, что такая маленькая разница, возможно, возникает из-за оверхеда, полученного от подсчета статистики байтов и использования различных служебных инструментов во время замеров. Для полноты картины мы можем посмотреть на результаты с немного другой стороны (см. след. параграф)
+It is also worth noting that such a small difference may arise due to the overhead obtained from counting byte statistics and using various utility tools during measurements. To complete the picture, we can look at the results from a slightly different angle (see the following paragraph)
 
 
 ### Kernel time
-Рассмотрим время работы в `kernel space`. Для этого используем утилиту `time`. 
+Consider the running time in 'kernel space'. To do this, use the `time` utility.
 
 | size      | method   | kernel_time, s |
 |------------|----------|-------------|
@@ -156,12 +157,11 @@ $ ./file_reading_analysis -m {method} -i {input} -o {output} -b {batch size} -v 
 |  | read     | 0.204       |
 
 
-Как мы видим, мапинг файлов напрямую в память как правило проводит меньше времени в `kernel space`, хотя видно, что иногда конкуренты достигают похожих результатов (на маленьких размерах даже обгоняют).
+As we can see, mapping files directly into memory usually spends less time in the `kernel space`, although it is clear that sometimes competitors achieve similar results (they even overtake on small sizes).
 
-Из данных можно также сделать вывод, что с ростом файла тенденция такая, что у `mmap` время в `kernel space` может расти медленнее, чем у остальных.
+From the data, we can also conclude that with the growth of the file, the trend is such that the `mmap` time in the `kernel space` may grow slower than the rest.
 
-## Выводы
-- При использовании `read`/`ifstream` может дать лучший перформанс подход с чтением по батчам
-- Использование маленького размера батча на большом файле может обернуться в сильный проигрыш по перформансу
-- `mmap` является хорошим (с точки зрения производительности) подходом для работы с файлами, однако вряд ли подойдет, если у нас ограниченный размер оперативной памяти
-- `mmap` проводит меньше времени в `kernel space`
+## Conclusions
+- When using `read`/`ifstream` can give a better performance approach with reading by butch
+- Using a small batch size on a large file can result in a strong performance loss
+- `mmap` spends less time in `kernel space`
