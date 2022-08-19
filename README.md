@@ -21,6 +21,7 @@ $ ./file_reading_analysis -m {method} -i {input} -o {output} -b {batch size} -v 
 `-v` -- verbose (optional)
 
 # Report
+**A dark github theme can lead to poor graph display. See [issue](https://github.com/bagrorg/file_reading_analysis/issues/9)**
 ## Designations
 - `ms` -- microseconds
 - `s` -- seconds 
